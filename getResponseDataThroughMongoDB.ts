@@ -1,4 +1,4 @@
-import { mongoDbTransaction } from './mogodb';
+import { mongoDbTransaction } from './mongodb';
 
 export async function getResponseThroughMongoDB(id, request, forceRequest=null) : Promise<ResponseJson> {
   id = id.toString();

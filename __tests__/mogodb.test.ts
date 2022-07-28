@@ -1,4 +1,4 @@
-import { mongoDbTransaction } from "../mogodb";
+import { mongoDbTransaction } from "../mongodb";
 
 it.skip("mongodb-insertOne", async () => {
 	await mongoDbTransaction(async (dbo) => {
