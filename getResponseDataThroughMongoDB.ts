@@ -81,6 +81,26 @@ export async function getResultThroughMongoDB(id, func) : Promise<any> {
   
   return result;
 }
+export async function getResultThroughMongoDBv2(input, func, forceRequest=null) : Promise<any> {
+  const tableName = func.name;
+  let result = null;
+  await mongoDbTransaction(async dbo => {
+    const collection = await dbo.collection(tableName).findOne(input);
+    if(collection == null || forceRequest) {
+      result = await func(input);
+
+      await dbo.collection(tableName).replaceOne(input, {
+        ...input,
+        result
+      }, {upsert: true});
+    }
+    else {
+      result = collection.result;
+    }
+  })
+  
+  return result;
+}
 
 export interface ResponseJson {
   msg: string;
