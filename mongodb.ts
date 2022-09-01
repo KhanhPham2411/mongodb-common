@@ -15,7 +15,7 @@ export async function mongoDbTransaction(func) {
 	var db = await MongoClient.connect(MongoUrl).catch(err => { console.log(err); });
 	var dbo = db.db("mydb");
 
-	await func(dbo).catch(err => { console.log(err); });
+	await func(dbo).catch(err => { console.log(err); throw err; });
 
 	db.close();
 }
