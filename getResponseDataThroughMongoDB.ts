@@ -102,6 +102,62 @@ export async function getResultThroughMongoDBv2(input, func, forceRequest=null) 
   return result;
 }
 
+// ttl in seconds
+export async function getResultThroughMongoDBv3(input, func, {forceRequest=false, key=null, ttl=-1, prefixKey=""}) : Promise<any> {
+  let tableName;
+  if(key) {
+    tableName = key;
+  } else {
+    tableName = prefixKey + func.name;
+  }
+
+  let result = null;
+  await mongoDbTransaction(async dbo => {
+    const collection = await dbo.collection(tableName).findOne(input);
+
+    let isExpiredTime = false;
+    if(collection) {
+      isExpiredTime = checkExpiredTime(collection.lastModified, Date.now(), ttl);
+    }
+
+    if(collection == null || forceRequest || isExpiredTime) {
+      result = await func(input);
+      
+      var date = new Date();
+      await dbo.collection(tableName).replaceOne(input, {
+        ...input,
+        result,
+        lastModified: date.getTime(),
+        lastModifiedString: date.toString()
+      }, {upsert: true});
+    }
+    else {
+      result = collection.result;
+    }
+  })
+  
+  return result;
+}
+
+// ttl in seconds
+export function checkExpiredTime(date1: number, date2: number, ttl: number) {
+  if(ttl < 0) {
+    return false;
+  }
+  if(date1 == null || date2 == null || ttl == 0) {
+    return true;
+  }
+
+  const diffTime = Math.abs(date2 - date1);
+  const diffSeconds = Math.ceil(diffTime / (1000)); 
+
+  if(diffSeconds > ttl) {
+    return true;
+  }
+
+  return false;
+}
+
 export interface ResponseJson {
   msg: string;
   data: any;
