@@ -67,7 +67,7 @@ export class MongoDbCache {
       data = await dbo.collection(this.tableName).findOne({key});
     });
 
-    return data.value;
+    return data?.value;
   }
 
   public async set(key, value) {
